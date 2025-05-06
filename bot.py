@@ -30,17 +30,12 @@ RESPONSE_CHANCE = config.get("response_chance", 0)
 # Discord bot setup
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix='g~', intents=intents)
+bot = commands.Bot(command_prefix='G!', intents=intents)
 
 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
-
-
-async def replace_mentions_with_usernames(message: discord.Message, text: str) -> str:
-
-    return text
 
 
 async def get_greg_response(prompt: str) -> str:
@@ -121,6 +116,17 @@ async def ask_greg(ctx, *, prompt: str):
 @bot.command(name='pet')
 async def pet(ctx):
     await ctx.message.add_reaction("❤️")
+
+
+@bot.command(name='feed')
+async def feed(ctx, *, prompt: str):
+    async with ctx.typing():
+        try:
+            reply = await get_greg_response(ctx.author.name + " tries to feed you a " + prompt + ". How does Greg respond?")
+            await ctx.reply(reply[:2000])
+        except Exception as e:
+            await ctx.reply(f'Error: {e}')
+
 
 
 @bot.check
