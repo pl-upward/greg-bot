@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 import json
 from openai import OpenAI
+import re
 
 # load env vars and openai setup
 load_dotenv()
@@ -86,18 +87,6 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-# pet the snek
-@bot.command(name='pet')
-async def pet(ctx):
-    await ctx.message.add_reaction("❤️")
-
-
-# only let whitelisted users use him
-@bot.check
-def is_whitelisted(ctx):
-    return ctx.author.id in WHITELIST
-
-
 @bot.command(name='askgreg')
 async def ask_greg(ctx, *, prompt: str):
     async with ctx.typing():
@@ -142,5 +131,18 @@ async def ask_greg(ctx, *, prompt: str):
             await ctx.reply(reply[:2000])
         except Exception as e:
             await ctx.reply(f'Error: {e}')
+
+
+# pet the snek
+@bot.command(name='pet')
+async def pet(ctx):
+    await ctx.message.add_reaction("❤️")
+
+
+# only let whitelisted users use him
+@bot.check
+def is_whitelisted(ctx):
+    return ctx.author.id in WHITELIST
+
 
 bot.run(TOKEN)
