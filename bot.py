@@ -33,6 +33,21 @@ async def on_ready():
     print(f'Logged in as {bot.user}')
 
 
+async def replace_mentions_with_usernames(message: discord.Message, text: str) -> str:
+    pattern = r"<@!?(\d+)>"
+    matches = re.findall(pattern, text)
+
+    for user_id in matches:
+        try:
+            user = await message.guild.fetch_member(user_id)
+            username = user.display_name
+            text = re.sub(f"<@!?{user_id}>", username, text)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            continue
+
+    return text
+
+
 # reply to mentions
 @bot.event
 async def on_message(message):
