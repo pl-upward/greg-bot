@@ -5,16 +5,19 @@ from dotenv import load_dotenv
 import json
 from openai import OpenAI
 import re
+import random
 
 # Load env vars and OpenAI setup
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 client = OpenAI()
 
+
 # Load config from JSON
 def load_config():
     with open("greg_config.json", "r") as f:
         return json.load(f)
+
 
 config = load_config()
 
@@ -36,16 +39,6 @@ async def on_ready():
 
 
 async def replace_mentions_with_usernames(message: discord.Message, text: str) -> str:
-    pattern = r"<@!?(\\d+)>"
-    matches = re.findall(pattern, text)
-
-    for user_id in matches:
-        try:
-            user = await message.guild.fetch_member(user_id)
-            username = user.display_name
-            text = re.sub(f"<@!?{user_id}>", username, text)
-        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
-            continue
 
     return text
 
@@ -89,15 +82,25 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
+    # check if "greg" is mentioned and reply to the message or a .5% chance to reply
+    if "greg" in message.content.lower() or random.random() < 0.005:
+        async with message.channel.typing():
+            try:
+                reply = await get_greg_response(message.content)
+                await message.reply(reply[:2000])
+            except Exception as e:
+                await message.reply(f"Error: {e}")
+        return
+
+    # reply to mentions of the bot
     if bot.user in message.mentions:
         if message.author.id not in WHITELIST:
             await message.reply("sss (You are not whitelisted to talk to Greg. Ask Garrett or Erin for access!)")
             return
 
         async with message.channel.typing():
-            cleaned = await replace_mentions_with_usernames(message, message.content)
             try:
-                reply = await get_greg_response(cleaned)
+                reply = await get_greg_response(message.content)
                 await message.reply(reply[:2000])
             except Exception as e:
                 await message.reply(f"Error: {e}")
@@ -109,8 +112,7 @@ async def on_message(message):
 async def ask_greg(ctx, *, prompt: str):
     async with ctx.typing():
         try:
-            cleaned = await replace_mentions_with_usernames(ctx.message, prompt)
-            reply = await get_greg_response(cleaned)
+            reply = await get_greg_response(prompt)
             await ctx.reply(reply[:2000])
         except Exception as e:
             await ctx.reply(f'Error: {e}')
