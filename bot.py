@@ -4,7 +4,6 @@ import os
 from dotenv import load_dotenv
 import json
 from openai import OpenAI
-import re
 import random
 
 # Load env vars and OpenAI setup
@@ -26,6 +25,7 @@ SYSTEM_PROMPT = config.get("system_prompt", "")
 MAX_TOKENS = config.get("max_tokens", 1024)
 TEMPERATURE = config.get("temperature", 1.0)
 MODEL = config.get("model", "gpt-4.1-nano")
+RESPONSE_CHANCE = config.get("response_chance", 0)
 
 # Discord bot setup
 intents = discord.Intents.default()
@@ -83,7 +83,7 @@ async def on_message(message):
         return
 
     # check if "greg" is mentioned and reply to the message or a .5% chance to reply
-    if "greg" in message.content.lower() or random.random() < 0.005:
+    if "greg" in message.content.lower() or random.random() < RESPONSE_CHANCE:
         async with message.channel.typing():
             try:
                 reply = await get_greg_response(message.content)
