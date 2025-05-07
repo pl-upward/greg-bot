@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import json
 from openai import OpenAI
 import random
+from collections import defaultdict, deque
 
 # Load env vars and OpenAI setup
 load_dotenv()
@@ -33,6 +34,10 @@ RESPONSE_CHANCE = config.get("response_chance", 0)
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='G!', intents=intents)
+
+# Keep track of x most recent message objects
+# Key: channel ID, Value: deque of messages
+channel_messages = defaultdict(lambda: deque(maxlen=20))
 
 
 @bot.event
@@ -76,6 +81,9 @@ async def get_greg_response(prompt: str) -> str:
 
 @bot.event
 async def on_message(message):
+
+    channel_messages[message.channel.id].append(message)
+
     if message.author == bot.user:
         return
 
