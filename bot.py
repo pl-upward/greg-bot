@@ -17,7 +17,7 @@ client = OpenAI()
 
 # Load config from JSON
 def load_config():
-    with open("greg_config.json", "r") as f:
+    with open("default_config.json", "r") as f:
         return json.load(f)
 
 
@@ -74,7 +74,7 @@ async def get_greg_response(prompt: str) -> str:
         temperature=TEMPERATURE,
         max_output_tokens=MAX_TOKENS,
         top_p=1,
-        store=True
+        store=False
     )
     return response.output[0].content[0].text
 
