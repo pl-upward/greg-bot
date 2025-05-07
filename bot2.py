@@ -43,31 +43,56 @@ def load_server_config(guild_id):
         return load_config(path)
     return {}
 
+
+# Log a new user in the guild's json
+def add_new_user(user_id, guild_id, name, summary="", approval_rating=5.0):
+    file_path = f"{SERVER_CONFIG_DIR}/{guild_id}.json"
+
+    if not os.path.exists(file_path):
+        print(f"Error: {file_path} does not exist.\n")
+        return
+
+    config = load_config(file_path)
+
+    config.setdefault("users", {})
+    config["users"][str(user_id)] = {
+        "name": name,
+        "summary": summary,
+        "approval_rating": approval_rating
+    }
+
+    with open(file_path, "w") as f:
+        json.dump(config, f, indent=4)
+
+
 ########################################################################################################################
-# BOT COMMANDS #
-
-
+# <editor-fold desc="whitelist check">
 # Checks if user is in the server's whitelist
 @bot.check
 def is_whitelisted(ctx):
     guild_id = str(ctx.guild.id)
-    config_path = f"configs/{guild_id}.json"
+    config_path = f"{SERVER_CONFIG_DIR}/{guild_id}.json"
 
     if not os.path.exists(config_path):
+        print(f"Error: {config_path} does not exist.\n")
         return False
 
     config = load_config(config_path)
 
     whitelist = config.get("whitelist", [])
     return ctx.author.id in whitelist
+# </editor-fold>
 
 
+# <editor-fold desc="logs that bot is ready">
 # Log that the bot is working to console
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
+# </editor-fold>
 
 
+# <editor-fold desc="join/leave cmds">
 # Create config for each server the bot is in
 @bot.event
 async def on_guild_join(guild):
@@ -82,7 +107,9 @@ async def on_guild_join(guild):
             "system_prompt": default_config_json.get("system_prompt", ""),
             "temperature": default_config_json.get("temperature", 0),
             "whitelist": default_config_json.get("whitelist", []),
-            "response_chance": default_config_json.get("response_chance", 0)
+            "response_chance": default_config_json.get("response_chance", 0),
+            "channel_msg_buffer": default_config_json.get("channel_msg_buffer", 20),
+            "users": default_config_json.get("users", {})
         }
 
         with open(config_path, "w") as f:
@@ -101,8 +128,21 @@ async def on_guild_remove(guild):
             print(f"Removed config for guild {guild.name} ({guild.id})")
     except Exception as e:
         print(f"Failed to remove config for guild {guild.name} ({guild.id})")
+# </editor-fold>
 
-#
+
+# <editor-fold desc="testing cmds">
+@bot.command(name="add_me")
+async def add_user(ctx, summary: str, rating: float):
+    user_id = ctx.author.id
+    guild_id = ctx.guild.id
+    username = ctx.author.display_name
+
+    add_new_user(user_id, guild_id, username, summary, rating)
+
+    await ctx.send(f"Added {username} to {guild_id} with summary '{summary}' and rating {rating}")
+
+# </editor-fold>
 ########################################################################################################################
 
 bot.run(TOKEN)
