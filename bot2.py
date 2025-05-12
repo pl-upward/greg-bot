@@ -45,7 +45,7 @@ def load_server_config(guild_id):
 
 
 # Log a new user in the guild's json
-def add_new_user(user_id, guild_id, name, summary="", approval_rating=5.0):
+def update_user(user_id, guild_id, name, summary="Greg doesn't know this person yet.", approval_rating=5.0):
     file_path = f"{SERVER_CONFIG_DIR}/{guild_id}.json"
 
     if not os.path.exists(file_path):
@@ -63,6 +63,30 @@ def add_new_user(user_id, guild_id, name, summary="", approval_rating=5.0):
 
     with open(file_path, "w") as f:
         json.dump(config, f, indent=4)
+
+
+# Remove the user from the json
+def remove_user(user_id, guild_id):
+    file_path = f"{SERVER_CONFIG_DIR}/{guild_id}.json"
+
+    if not os.path.exists(file_path):
+        print(f"Error: {file_path} does not exist.\n")
+        return
+
+    config = load_config(file_path)
+    users = config.get("users", {})
+    user_id_str = str(user_id)
+
+    if user_id_str in users:
+        del users[user_id_str]
+        config["users"] = users
+
+        with open(file_path, "w") as f:
+            json.dump(config, f, indent=4)
+
+        print(f"User {user_id_str} removed.\n")
+    else:
+        print(f"User {user_id_str} does not exist.\n")
 
 
 ########################################################################################################################
@@ -131,16 +155,31 @@ async def on_guild_remove(guild):
 # </editor-fold>
 
 
-# <editor-fold desc="testing cmds">
-@bot.command(name="add_me")
-async def add_user(ctx, summary: str, rating: float):
-    user_id = ctx.author.id
+# <editor-fold desc="modify users">
+@bot.command(name="remove")
+async def remove(ctx, member: discord.Member):
     guild_id = ctx.guild.id
-    username = ctx.author.display_name
+    user_id = member.id
 
-    add_new_user(user_id, guild_id, username, summary, rating)
+    remove_user(user_id, guild_id)
+    await ctx.send(f"*Greg's memories of {member.display_name} are fading...*")
 
-    await ctx.send(f"Added {username} to {guild_id} with summary '{summary}' and rating {rating}")
+
+@bot.command(name="edit")
+async def edit(ctx, member: discord.Member, rating: float, *, summary: str):
+    guild_id = ctx.guild.id
+    user_id = member.id
+    name = member.display_name
+
+    update_user(user_id, guild_id, name, summary, rating)
+    await ctx.send(f"*Greg seems to think differently of {name} after hearing this new information.*")
+
+
+# </editor-fold>
+
+
+# <editor-fold desc="silly cmds">
+
 
 # </editor-fold>
 ########################################################################################################################
