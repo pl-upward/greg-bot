@@ -235,7 +235,39 @@ async def get_response(prompt: str, guild_id: int) -> str:
 # <editor-fold desc="Message handling">
 
 
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
 
+    guild_id = message.guild.id
+    file_path = f"{SERVER_CONFIG_DIR}/{guild_id}.json"
+
+    if not os.path.exists(file_path):
+        print(f"Error: no config for server {guild_id}")
+        return
+
+    config = load_config(file_path)
+
+    response_chance = config.get("response_chance", 0)
+    msg_content = message.content.lower()
+
+    if "greg" in msg_content or random.random() < response_chance:
+        async with message.channel.typing():
+            try:
+                reply = await get_response(message.content, message.guild.id)
+                await message.reply(reply[:2000])
+            except Exception as e:
+                await message.reply("*Greg slithers under a rock, disappearing into the darkness.* (OpenAI failed to "
+                                    "get a response)")
+        return
+
+    if bot.user in message.mentions:
+        if not is_whitelisted(message.author.id):
+            # YOU GOTTA REDO THIS WHOLE THING BRUH
+            return
+
+    await bot.process_commands(message)
 # </editor-fold>
 
 

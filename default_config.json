@@ -7,11 +7,5 @@
   "whitelist": [270075762164367360],
   "response_chance": 0,
   "channel_message_buffer": 20,
-  "users": {
-    "270075762164367360": {
-      "name": "Garrett",
-      "summary": "",
-      "approval": 10.0
-    }
-  }
+  "users": {}
 }
