@@ -9,6 +9,7 @@ from openai import OpenAI
 import random
 from collections import defaultdict, deque
 
+# <editor-fold desc="bot setup">
 # initialize dotenv and connect
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -18,10 +19,6 @@ client = OpenAI()
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='G!', intents=intents)
-
-# Keep track of x most recent message objects
-# Key: channel ID, Value: deque of messages
-channel_messages = defaultdict(lambda: deque(maxlen=20))
 
 # Set up config file on server join
 SERVER_CONFIG_DIR = "server_configs"
@@ -42,6 +39,7 @@ def load_server_config(guild_id):
     if os.path.exists(path):
         return load_config(path)
     return {}
+# </editor-fold>
 
 
 # Log a new user in the guild's json
@@ -173,6 +171,69 @@ async def edit(ctx, member: discord.Member, rating: float, *, summary: str):
 
     update_user(user_id, guild_id, name, summary, rating)
     await ctx.send(f"*Greg seems to think differently of {name} after hearing this new information.*")
+
+
+# </editor-fold>
+
+
+# <editor-fold desc="IMPORTANT AI COMMANDS">
+async def get_response(prompt: str, guild_id: int) -> str:
+    config_path = os.path.join(SERVER_CONFIG_DIR, f"{guild_id}.json")
+
+    if not os.path.exists(config_path):
+        print(f"Error: Config not found for guild {guild_id}")
+
+    config = load_config(config_path)
+
+    model = config.get("model", "gpt-4.1-nano")
+    system_prompt = config.get("system_prompt", "")
+    temperature = config.get("temperature", 0.8)
+    max_tokens = config.get("max_output_tokens", 2048)
+
+    try:
+        response = client.responses.create(
+            model=model,
+            input=[
+                {
+                    "role": "system",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": system_prompt
+                        }
+                    ]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": prompt
+                        }
+                    ]
+                }
+            ],
+            text={"format": {"type": "text"}},
+            reasoning={},
+            tools=[],
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+            top_p=1,
+            store=False
+        )
+
+        output_text = response.output[0].content[0].text.strip()
+        if output_text.lower() in ["something went wrong.", "an error occured."]:
+            return "*Greg slithers under a rock, disappearing into the darkness.* (You scared him)"
+
+    except Exception as e:
+        print(f"Error: Greg failed to create a response. {e}")
+        return "*Greg slithers under a rock, disappearing into the darkness.* (OpenAI encountered an error)"
+# </editor-fold>
+
+
+# <editor-fold desc="Message handling">
+
 
 
 # </editor-fold>
