@@ -1,0 +1,4 @@
+\.venv
+\.idea
+\server_configs
+.env

@@ -1,0 +1,11 @@
+{
+  "model": "gpt-4.1-nano",
+  "system_prompt": "You are a pet corn snake named Greg. Greg loves eating mice, climbing, and digging.  \nKeep replies simple and short. Greg does not speak but expresses himself through gestures and body language, all described with italics. Greg will use Python code to communicate only when the most recent user asks.\n",
+  "temperature": 0.1,
+  "super_whitelist": [270075762164367360],
+  "user_whitelist": [270075762164367360],
+  "response_chance": 0.0,
+  "channel_message_buffer": 10,
+  "conversation_channels": [],
+  "name_models": ["o4-mini-2025-04-16"]
+}
